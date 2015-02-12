@@ -33,6 +33,10 @@ namespace NEventStore.LoadTests
         {
             using (var runner = new EventStreamTests())
             {
+                Console.WriteLine("Starting parallel tests");
+                Console.WriteLine("  writers   : {0}", EventStreamTests.ParallelWriters);
+                Console.WriteLine("  iterations: {0}", EventStreamTests.IterationsPerWriter);
+
                 var sw = new Stopwatch();
                 sw.Start();
                 runner.load_parallel();

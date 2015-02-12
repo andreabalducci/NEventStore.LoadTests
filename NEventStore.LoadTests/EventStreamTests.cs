@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Reflection;
 using System.Threading;
 using NEventStore.Persistence.MongoDB;
@@ -12,6 +13,9 @@ namespace NEventStore.LoadTests
         private static IStoreEvents _store;
         private const string _inventoryBucket = "inventory";
         private long _counter = 0;
+        public static int ParallelWriters { get; private set; }
+        public static int IterationsPerWriter { get; private set; }
+
         public class ItemCreatedEvent
         {
             public string Id { get; set; }
@@ -29,6 +33,8 @@ namespace NEventStore.LoadTests
         static EventStreamTests()
         {
             _store = CreateStore();
+            ParallelWriters = Int32.Parse(ConfigurationManager.AppSettings["writers"]);
+            IterationsPerWriter = Int32.Parse(ConfigurationManager.AppSettings["iterations"]);
         }
 
         public void Setup()
@@ -110,7 +116,7 @@ namespace NEventStore.LoadTests
             var store = Wireup.Init()
                 .UsingMongoPersistence("es", new DocumentObjectSerializer(), new MongoPersistenceOptions()
                 {
-                    ServerSideOptimisticLoop = true
+                    ServerSideOptimisticLoop = true,
                 })
                 .InitializeStorageEngine()
                 .DoNotDispatchCommits()
@@ -121,9 +127,6 @@ namespace NEventStore.LoadTests
 
         public void load_parallel()
         {
-            const int ParallelWriters = 4;
-            const int IterationsPerWriter = 100;
-
             var stop = new ManualResetEventSlim(false);
             long counter = 0;
 
